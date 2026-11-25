@@ -19,13 +19,13 @@
   "cloudflare": {
     "bindings": {
       "ADMIN_PASSWORD": {
-        "description": "Password for the admin page at `/admin`. Use a long, random string. / 後台 `/admin` 的登入密碼，請用夠長的隨機字串。"
+        "description": "Password for the admin page at `/admin`. Use a long, random string."
       },
       "HOME_URL": {
-        "description": "Optional. Where to send visitors who open the bare domain. Leave empty to show a simple page. / 選填。直接開啟網域首頁時要轉去的網址，留空則顯示簡單頁面。"
+        "description": "Optional. Where to send visitors who open the bare domain. Leave empty to show a simple page."
       },
       "DB": {
-        "description": "D1 database that stores your links. A new one is created for you. / 存放短網址的 D1 資料庫，會自動幫你建立。"
+        "description": "D1 database that stores your links. A new one is created for you."
       }
     }
   }
