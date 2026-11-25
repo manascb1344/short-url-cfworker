@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SLUG_ALPHABET, normalizeUrl, randomSlug, validateSlug, withQuery } from "../src/links";
 
 describe("validateSlug", () => {
-  it.each(["abc", "My-Link_2", "活動", "v1.2", "a~b"])("accepts %s", (slug) => {
+  it.each(["abc", "My-Link_2", "café", "v1.2", "a~b"])("accepts %s", (slug) => {
     expect(validateSlug(slug)).toBeNull();
   });
 

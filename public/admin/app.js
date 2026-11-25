@@ -1,68 +1,6 @@
 "use strict";
 
 const MESSAGES = {
-  zh: {
-    appName: "短網址",
-    logout: "登出",
-    notConfiguredTitle: "尚未設定密碼",
-    notConfiguredBody: "請在 Cloudflare 後台替這個 Worker 加上名為 ADMIN_PASSWORD 的 Secret，然後重新整理這個頁面。",
-    loginTitle: "登入",
-    password: "密碼",
-    login: "登入",
-    createTitle: "建立短網址",
-    targetUrl: "目標網址",
-    slug: "短碼",
-    slugHint: "已自動產生，可以改成你想要的",
-    slugPlaceholder: "輸入網址後自動產生",
-    reroll: "換一個",
-    note: "備註（選填）",
-    noteLabel: "備註",
-    notePlaceholder: "方便之後搜尋",
-    create: "建立",
-    created: "已建立",
-    copy: "複製",
-    copied: "已複製",
-    linksTitle: "所有短網址",
-    total: (n) => `共 ${n} 條`,
-    searchPlaceholder: "搜尋短碼、網址或備註",
-    noLinks: "還沒有短網址，從上面建立第一條吧。",
-    noResults: "找不到符合的短網址。",
-    prev: "上一頁",
-    next: "下一頁",
-    pageInfo: (page, pages) => `${page} / ${pages}`,
-    clicks: (n) => `${n.toLocaleString()} 次點擊`,
-    justNow: "剛剛",
-    edit: "編輯",
-    delete: "刪除",
-    editTitle: "編輯短網址",
-    renameWarning: (slug) => `改了短碼後，舊的「${slug}」會失效，已經分享出去的連結會打不開。`,
-    cancel: "取消",
-    save: "儲存",
-    saved: "已儲存",
-    deleteTitle: "刪除短網址？",
-    deleteConfirm: (slug) => `「${slug}」刪除後就無法再使用，這個動作無法復原。`,
-    deleted: "已刪除",
-    importTitle: "從舊版 KV 匯入",
-    importBody: "偵測到 LEGACY_KV 綁定。可以把舊版 Url-Shorten-Worker 的短網址匯入到這裡，已存在的短碼會略過。",
-    importButton: "開始匯入",
-    importing: "匯入中…",
-    importDone: (imported, skipped) => `匯入 ${imported} 條，略過 ${skipped} 筆。`,
-    errors: {
-      wrong_password: "密碼錯誤。",
-      wrongPasswordRemaining: (n) => (n > 0 ? `密碼錯誤，還可以再試 ${n} 次。` : "密碼錯誤，嘗試次數已用完，請 15 分鐘後再試。"),
-      too_many_attempts: (minutes) => `嘗試太多次，請 ${minutes} 分鐘後再試。`,
-      not_configured: "尚未設定 ADMIN_PASSWORD。",
-      invalid_url: "請輸入以 http:// 或 https:// 開頭的完整網址。",
-      invalid_slug: "短碼只能包含文字、數字和 - _ . ~，不能以 . 開頭，最多 64 字。",
-      reserved_slug: "這個短碼是系統保留字，請換一個。",
-      slug_taken: "這個短碼已經有人用了。",
-      invalid_note: "備註最多 500 字。",
-      not_found: "找不到這條短網址，可能已被刪除。",
-      network: "連線失敗，請稍後再試。",
-      unknown: "發生錯誤，請稍後再試。",
-    },
-  },
-  en: {
     appName: "Short links",
     logout: "Log out",
     notConfiguredTitle: "No password set",
@@ -123,14 +61,12 @@ const MESSAGES = {
       network: "Network error. Please try again.",
       unknown: "Something went wrong. Please try again.",
     },
-  },
 };
 
 const PAGE_SIZE = 20;
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  lang: pickLanguage(),
   query: "",
   page: 1,
   total: 0,
@@ -138,29 +74,20 @@ const state = {
   editing: null,
 };
 
-function pickLanguage() {
-  try {
-    const saved = localStorage.getItem("lang");
-    if (saved === "zh" || saved === "en") return saved;
-  } catch {}
-  return "en";
-}
-
 function t(key, ...args) {
-  const value = MESSAGES[state.lang][key];
+  const value = MESSAGES[key];
   return typeof value === "function" ? value(...args) : value;
 }
 
 function errorText(code, ...args) {
-  const errors = MESSAGES[state.lang].errors;
+  const errors = MESSAGES.errors;
   const value = errors[code] ?? errors.unknown;
   return typeof value === "function" ? value(...args) : value;
 }
 
-function applyLanguage() {
-  document.documentElement.lang = state.lang === "zh" ? "zh-Hant" : "en";
+function applyMessages() {
+  document.documentElement.lang = "en";
   document.title = `${location.host} · ${t("appName")}`;
-  $("lang-toggle").textContent = state.lang === "zh" ? "EN" : "中文";
   for (const el of document.querySelectorAll("[data-i18n]")) el.textContent = t(el.dataset.i18n);
   for (const el of document.querySelectorAll("[data-i18n-placeholder]")) el.placeholder = t(el.dataset.i18nPlaceholder);
   for (const el of document.querySelectorAll("[data-i18n-title]")) el.title = t(el.dataset.i18nTitle);
@@ -240,7 +167,7 @@ async function copy(text) {
 function formatDate(seconds) {
   const date = new Date(seconds * 1000);
   const diff = (date.getTime() - Date.now()) / 1000;
-  const rtf = new Intl.RelativeTimeFormat(state.lang === "zh" ? "zh-Hant" : "en", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
   const units = [
     ["year", 31536000],
     ["month", 2592000],
@@ -256,7 +183,7 @@ function formatDate(seconds) {
 }
 
 function fullDate(seconds) {
-  return new Date(seconds * 1000).toLocaleString(state.lang === "zh" ? "zh-Hant" : "en");
+  return new Date(seconds * 1000).toLocaleString("en");
 }
 
 // --- Link list ---
@@ -529,21 +456,13 @@ async function onLogout() {
 }
 
 async function init() {
-  applyLanguage();
+  applyMessages();
   $("site-name").textContent = location.host;
   for (const el of document.querySelectorAll(".prefix")) {
     el.textContent = `${location.host}/`;
     el.title = `${location.origin}/`;
   }
 
-  $("lang-toggle").addEventListener("click", () => {
-    state.lang = state.lang === "zh" ? "en" : "zh";
-    try {
-      localStorage.setItem("lang", state.lang);
-    } catch {}
-    applyLanguage();
-    renderLinks();
-  });
   $("logout").addEventListener("click", onLogout);
   $("login-form").addEventListener("submit", onLogin);
   $("create-form").addEventListener("submit", onCreate);
