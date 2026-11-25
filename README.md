@@ -1,6 +1,6 @@
 # short-url-cfworker
 
-English | [繁體中文](README.zh-TW.md)
+English
 
 A personal URL shortener that runs on Cloudflare Workers. Links are stored in a Cloudflare D1 database and managed from a web admin page. Everything fits in Cloudflare's free plan, so you don't need a server of your own.
 

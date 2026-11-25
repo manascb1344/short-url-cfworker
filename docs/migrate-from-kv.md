@@ -1,6 +1,6 @@
 # Moving from Url-Shorten-Worker
 
-English | [繁體中文](migrate-from-kv.zh-TW.md)
+English
 
 If you've been using [Url-Shorten-Worker](https://github.com/crazypeace/Url-Shorten-Worker), this guide moves your existing links over. Every link you already shared keeps working afterwards.
 
