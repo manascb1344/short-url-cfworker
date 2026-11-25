@@ -4,6 +4,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -34,3 +37,95 @@ jobs:
             echo "- Status: ${{ job.status }}"
             echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  full:
+    needs: fast
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        continue-on-error: true
+        run: |
+          mkdir -p lane-results
+          set +e
+          pnpm install --frozen-lockfile
+          code=$?
+          echo "$code" > lane-results/install.code
+          exit "$code"
+      - name: Full test suite
+        continue-on-error: true
+        run: |
+          mkdir -p lane-results
+          set +e
+          pnpm test
+          code=$?
+          echo "$code" > lane-results/test.code
+          exit "$code"
+      - name: Deploy dry run
+        continue-on-error: true
+        run: |
+          mkdir -p lane-results
+          set +e
+          pnpm exec wrangler deploy --dry-run --outdir dist-dry-run
+          code=$?
+          echo "$code" > lane-results/dry-run.code
+          exit "$code"
+      - name: Smoke check
+        continue-on-error: true
+        run: |
+          mkdir -p lane-results
+          set +e
+          bash scripts/smoke.sh > smoke.log 2>&1
+          code=$?
+          cat smoke.log
+          echo "$code" > lane-results/smoke.code
+          exit "$code"
+      - name: Write full lane summary
+        if: always()
+        run: |
+          summary() {
+            lane=$1
+            cmd=$2
+            artifact=$3
+            file="lane-results/$lane.code"
+            if [ -f "$file" ]; then code=$(cat "$file"); else code=-1; fi
+            echo "| $lane | \`$cmd\` | $code | $artifact |"
+          }
+          {
+            echo '### Full lane'
+            echo
+            echo "- Gate: ${{ needs.fast.result }}"
+            echo
+            echo '| Lane | Command | Exit code | Artifact path |'
+            echo '| --- | --- | --- | --- |'
+            summary install 'pnpm install --frozen-lockfile' -
+            summary test 'pnpm test' -
+            summary dry-run 'pnpm exec wrangler deploy --dry-run --outdir dist-dry-run' dist-dry-run
+            summary smoke 'bash scripts/smoke.sh' smoke.log
+          } >> "$GITHUB_STEP_SUMMARY"
+          failed=0
+          for lane in install test dry-run smoke; do
+            file="lane-results/$lane.code"
+            if [ ! -f "$file" ] || [ "$(cat "$file")" != 0 ]; then
+              failed=1
+            fi
+          done
+          exit "$failed"
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-lane-failure
+          path: |
+            dist-dry-run
+            smoke.log
+          if-no-files-found: ignore
