@@ -5,6 +5,7 @@
   "description": "A self-hosted URL shortener on Cloudflare Workers + D1, with an admin page.",
   "license": "MIT",
   "scripts": {
+    "check": "pnpm typecheck && pnpm exec vitest run --bail=1 --reporter=dot --testTimeout=10000",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "vitest run",
