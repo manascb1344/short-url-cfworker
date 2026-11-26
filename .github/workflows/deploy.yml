@@ -1,0 +1,47 @@
+name: Deploy
+
+on: workflow_dispatch
+
+jobs:
+  deploy:
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: pnpm deploy
+      - name: Smoke check
+        run: |
+          set +e
+          admin=$(curl -s -o /dev/null -w '%{http_code}' https://go.anushkadhage.com/admin/)
+          root=$(curl -s -o /dev/null -w '%{http_code}' https://go.anushkadhage.com/)
+          echo "SMOKE_ADMIN=${admin:-000}" >> "$GITHUB_ENV"
+          echo "SMOKE_ROOT=${root:-000}" >> "$GITHUB_ENV"
+          echo "admin page: $admin"
+          echo "root page: $root"
+          if [ "$admin" != "200" ] || [ "$root" != "200" ]; then
+            echo "Smoke check failed: both pages must return HTTP 200"
+            exit 1
+          fi
+      - name: Write deploy summary
+        if: always()
+        run: |
+          {
+            echo '### Deploy request'
+            echo
+            echo '- Trigger: `workflow_dispatch`'
+            echo '- Environment approval: `production`'
+            echo '- Secret name: `CLOUDFLARE_API_TOKEN`'
+            echo "- Smoke result: admin page \`${SMOKE_ADMIN:-not run}\`, root page \`${SMOKE_ROOT:-not run}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
