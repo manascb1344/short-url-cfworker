@@ -57,8 +57,9 @@ jobs:
         run: |
           mkdir -p lane-results
           set +e
-          pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile > lane-results/install.log 2>&1
           code=$?
+          cat lane-results/install.log
           echo "$code" > lane-results/install.code
           exit "$code"
       - name: Full test suite
@@ -66,8 +67,9 @@ jobs:
         run: |
           mkdir -p lane-results
           set +e
-          pnpm test
+          pnpm test > lane-results/test.log 2>&1
           code=$?
+          cat lane-results/test.log
           echo "$code" > lane-results/test.code
           exit "$code"
       - name: Deploy dry run
@@ -75,8 +77,9 @@ jobs:
         run: |
           mkdir -p lane-results
           set +e
-          pnpm exec wrangler deploy --dry-run --outdir dist-dry-run
+          pnpm exec wrangler deploy --dry-run --outdir dist-dry-run > lane-results/dry-run.log 2>&1
           code=$?
+          cat lane-results/dry-run.log
           echo "$code" > lane-results/dry-run.code
           exit "$code"
       - name: Smoke check
@@ -127,5 +130,6 @@ jobs:
           name: full-lane-failure
           path: |
             dist-dry-run
+            lane-results
             smoke.log
           if-no-files-found: ignore
