@@ -76,13 +76,13 @@ Requires [Node.js](https://nodejs.org/) 20 or later and Git.
 ```bash
 git clone https://github.com/HappyGroupHub/short-url-cfworker.git
 cd short-url-cfworker
-npm install
+pnpm install
 ```
 
 **2. Log in to Cloudflare**
 
 ```bash
-npx wrangler login
+pnpm exec wrangler login
 ```
 
 A browser window opens on Cloudflare's authorization page. Click Allow.
@@ -90,7 +90,7 @@ A browser window opens on Cloudflare's authorization page. Click Allow.
 **3. Deploy**
 
 ```bash
-npm run deploy
+pnpm deploy
 ```
 
 On the first deploy, Wrangler asks whether to create a new D1 database. Choose to create one. Tables are created automatically on the first request, so there are no database commands to run.
@@ -98,7 +98,7 @@ On the first deploy, Wrangler asks whether to create a new D1 database. Choose t
 **4. Set the admin password**
 
 ```bash
-npx wrangler secret put ADMIN_PASSWORD
+pnpm exec wrangler secret put ADMIN_PASSWORD
 ```
 
 Type your password and press Enter.
@@ -172,9 +172,9 @@ If you used [Url-Shorten-Worker](https://github.com/crazypeace/Url-Shorten-Worke
 
 ```bash
 cp .dev.vars.example .dev.vars   # then set ADMIN_PASSWORD in it
-npm run dev                      # http://localhost:8787/admin/
-npm test                         # unit tests
-npm run typecheck
+pnpm dev                         # http://localhost:8787/admin/
+pnpm test                        # unit tests
+pnpm typecheck
 ```
 
 ## Project layout

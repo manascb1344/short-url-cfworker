@@ -11,6 +11,7 @@ server_pid=$!
 cleanup() {
   kill "$server_pid" 2>/dev/null || true
   wait "$server_pid" 2>/dev/null || true
+  rm -f .dev.vars
 }
 trap cleanup EXIT
 
