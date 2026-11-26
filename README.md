@@ -107,6 +107,17 @@ Type your password and press Enter.
 
 Open the URL printed by the deploy step, add `/admin`, and log in with that password.
 
+### Approved deploy workflow
+
+This repository has a `Deploy` workflow in `.github/workflows/deploy.yml` for releases from GitHub. You start it by hand. No push, pull request or schedule starts it.
+
+Set up two things in the repository settings first:
+
+- Add a `production` environment and add yourself as a required reviewer. The job waits for that approval before it runs.
+- Add a repository secret named `CLOUDFLARE_API_TOKEN` with a Cloudflare API token that can deploy this Worker.
+
+To deploy, open **Actions**, choose **Deploy**, and select **Run workflow**. Approve the pending `production` review when GitHub asks. The job installs dependencies, runs `pnpm deploy`, then checks that `https://go.anushkadhage.com/admin/` and `https://go.anushkadhage.com/` both return HTTP 200. The run summary records the trigger, the environment, the secret name, and the two status codes. It never prints the token value.
+
 ## Use your own domain
 
 The domain must already be on Cloudflare (Cloudflare manages its DNS).
